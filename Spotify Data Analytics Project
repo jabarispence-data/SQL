@@ -1,0 +1,82 @@
+# For this project, I downloaded Spotify data from Kaggle.
+# Then I created a table to insert Spotify data into.
+# Finally, I performed analytics on the data using SQL. 
+
+CREATE TABLE BIT_DB.Spotifydata (
+id integer PRIMARY KEY,
+artist_name varchar NOT NULL,
+track_name varchar NOT NULL,
+track_id varchar NOT NULL,
+popularity integer NOT NULL,
+danceability decimal(4,3) NOT NULL,
+energy decimal(4,3) NOT NULL,
+song_key integer NOT NULL,
+loudness decimal(5,3) NOT NULL,
+song_mode integer NOT NULL,
+speechiness decimal(5,4) NOT NULL,
+acousticness decimal(6,5) NOT NULL,
+instrumentalness decimal(8,7) NOT NULL,
+liveness decimal(5,4) NOT NULL,
+valence decimal(4,3) NOT NULL,
+tempo decimal(6,3) NOT NULL,
+duration_ms integer NOT NULL,
+time_signature integer NOT NULL );
+
+#Then I inserted the Spotify Data .csv into the table.
+
+#Next, I explored the data using the following SQL. 
+
+#1. Which artists appear most frequently in the Top 50 songs, and how many songs does each of those artists have on the list?
+
+SELECT artist_name
+, COUNT(track_name)
+FROM BIT_DB.Spotifydata
+GROUP BY artist_name
+ORDER BY COUNT(track_name) desc; 
+
+#2. What is the average popularity score for songs in the dataset, and which artists have an average popularity above that overall average?
+SELECT AVG(popularity)
+FROM BIT_DB.Spotifydata;
+
+SELECT artist_name
+FROM BIT_DB.Spotifydata
+WHERE popularity > (SELECT AVG(popularity)
+FROM BIT_DB.Spotifydata)
+;
+
+#3. Which artists have more than one song with popularity above 85, and how many qualifying songs does each artist have?
+SELECT artist_name
+, COUNT(*)
+FROM BIT_DB.Spotifydata
+WHERE popularity > 85
+GROUP BY artist_name
+HAVING COUNT (*) > 1;
+ 
+#4. Which songs have both above-average popularity and above-average danceability?
+
+SELECT track_name
+FROM BIT_DB.Spotifydata
+WHERE popularity > (SELECT AVG(popularity) FROM BIT_DB.Spotifydata)
+AND danceability > (SELECT AVG(danceability) FROM BIT_DB.Spotifydata);
+
+#5. Group the songs by energy rating, and which artists contribute to the songs in the high category?
+
+SELECT COUNT(*)
+, CASE 
+WHEN energy > 0.75 THEN 'high'
+WHEN energy > 0.50 THEN 'above_avg'
+WHEN energy > 0.25 THEN 'below_avg'
+ELSE 'bad'
+END AS 'energy_rating'
+FROM BIT_DB.Spotifydata
+GROUP BY CASE 
+WHEN energy > 0.75 THEN 'high'
+WHEN energy > 0.50 THEN 'above_avg'
+WHEN energy > 0.25 THEN 'below_avg'
+ELSE 'bad'
+END;
+
+SELECT artist_name
+,  track_name
+FROM BIT_DB.Spotifydata
+WHERE energy > 0.75;
