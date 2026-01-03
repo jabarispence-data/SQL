@@ -1,0 +1,105 @@
+#This project explores customer purchasing patterns, invoice activity, and sales agent revenue by querying and joining multiple relational tables using SQL.
+
+#1. Which customers live outside the United States (show full name, customer ID, and country)?
+
+SELECT FirstName
+, LastName
+, CustomerId
+, Country
+FROM chinook.customers
+WHERE Country NOT IN ("USA");
+
+#2. For customers in Brazil, what invoices do they have (show customer full name, invoice ID, invoice date, and billing country)? 
+
+SELECT chinook.customers.FirstName 
+, chinook.customers.LastName 
+, chinook.invoices.InvoiceId 
+, chinook.invoices.InvoiceDate 
+, chinook.invoices.BillingCountry 
+FROM chinook.invoices 
+JOIN chinook.customers 
+ON chinook.invoices.CustomerId = chinook.customers.CustomerId 
+WHERE chinook.customers.Country = 'Brazil';
+
+#3. What invoices are associated with each sales agent (show the sales agent’s full name along with each invoice ID and invoice date)?
+
+SELECT chinook.employees.FirstName
+, chinook.employees.LastName
+, chinook.invoices.InvoiceId
+, chinook.invoices.InvoiceDate
+FROM chinook.employees
+JOIN chinook.customers
+ON chinook.employees.EmployeeId = chinook.customers.SupportRepId
+JOIN chinook.invoices
+ON chinook.customers.CustomerId = chinook.invoices.CustomerId
+WHERE chinook.employees.Title LIKE '% Agent';
+
+#4. For every invoice, show the invoice total, customer full name, customer country, and the assigned sales agent’s full name.
+
+SELECT chinook.invoices.Total
+, chinook.customers.FirstName || ' ' || chinook.customers.LastName AS customer_name
+, chinook.customers.Country
+, chinook.employees.FirstName || ' ' || chinook.employees.LastName AS employee_name
+FROM chinook.invoices
+LEFT JOIN chinook.customers
+ON chinook.invoices.CustomerId = chinook.customers.CustomerId
+LEFT JOIN chinook.employees
+ON chinook.employees.EmployeeId = chinook.customers.SupportRepId;
+
+#5. How many invoices were created in 2009?
+
+SELECT COUNT(InvoiceID)
+FROM chinook.invoices
+WHERE InvoiceDate LIKE '2009-%';
+
+#6. What were the total sales in 2009 (sum of invoice totals)?
+
+SELECT SUM(Total)
+FROM chinook.invoices
+WHERE InvoiceDate LIKE '2009%';
+
+#7.For each invoice line, what track was purchased (show invoice line ID and track name)?
+
+SELECT chinook.invoice_items.InvoiceLineId
+, chinook.tracks.Name
+FROM chinook.invoice_items
+LEFT JOIN chinook.tracks
+ON chinook.invoice_items.TrackId = chinook.tracks.TrackId;
+
+#8. For each invoice line, show the purchased track name and the artist name (show invoice line ID, track name, artist name).
+
+SELECT chinook.invoice_items.InvoiceLineId
+, chinook.tracks.Name track_name
+, chinook.artists.Name artist_name
+FROM chinook.invoice_items
+LEFT JOIN chinook.tracks
+ON chinook.invoice_items.TrackId = chinook.tracks.TrackId
+LEFT JOIN chinook.artists
+ON chinook.artists.ArtistId = chinook.tracks.AlbumId;
+
+#9. Create a full track listing that includes track name, album name, media type, and genre (show one row per track).
+
+SELECT chinook.tracks.Name track
+, chinook.albums.Title album
+, chinook.media_types.Name media_type
+, chinook.genres.Name genre
+FROM chinook.tracks
+LEFT JOIN chinook.albums
+ON chinook.albums.AlbumId = chinook.tracks.AlbumId
+LEFT JOIN chinook.media_types
+ON chinook.media_types.MediaTypeId = chinook.tracks.MediaTypeId
+LEFT JOIN chinook.genres
+ON chinook.genres.GenreId = chinook.tracks.GenreId;
+
+#10. How much total revenue did each sales agent generate (show sales agent full name and total sales, ranked highest to lowest)?
+
+SELECT chinook.employees.FirstName
+, chinook.employees.LastName
+, SUM(chinook.invoices.Total)
+FROM chinook.employees
+LEFT JOIN chinook.customers
+ON chinook.customers.SupportRepId = chinook.employees.EmployeeId
+LEFT JOIN chinook.invoices
+ON chinook.invoices.CustomerId = chinook.customers.CustomerId
+GROUP BY chinook.employees.EmployeeId
+ORDER BY SUM(chinook.invoices.Total) desc;
